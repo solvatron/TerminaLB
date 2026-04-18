@@ -1,4 +1,5 @@
 #include "lattice.hpp"
+#include "../utils/utils.hpp"
 #include <vector>
 #include <cmath>
 
@@ -6,6 +7,7 @@ void Lattice::initialize(){
     //initializeVelocityF();
     //initializeDensityF();
     initializeDistributionF();
+    boundaryBuffer.initializeBoundaryBuffer(parameters.getDomainX(), parameters.getDomainY());
 }
 
 void Lattice::initializeDistributionF(){
@@ -30,8 +32,20 @@ void Lattice::collide(){
             setDistributions(latticeCoords, distributions);
         }
     }
+}
 
+void Lattice::stream(){
+    boundaryBuffer.setBoundaryBuffer(*this);
     incrementDisplacement();
+    boundaryBuffer.writeBoundaryBuffer(*this);
+    for(int boundary = 1; boundary <= 4; boundary++){
+        if(parameters.isInlet(boundary)){
+            boundaryBuffer.setInlet(boundary, *this, parameters.getInletVelocity(boundary));
+        }
+        if(parameters.isOutlet(boundary)){
+            boundaryBuffer.setOutlet(boundary, *this);
+        }
+    }
 }
 
 void Lattice::getDistributions(const std::vector<int>& latticeCoords, std::vector<float>& distributions) const{
@@ -97,6 +111,14 @@ void Lattice::relaxDistributions(const std::vector<float>& eqDistributions, std:
 
 
 void Lattice::incrementDisplacement(){
+    for(int direction = 0; direction < numDirections; direction++){
+        std::vector<int> incrementVec = latticeC[utils::reverse(direction)];
+        displacementVectors[direction][0] += incrementVec[0];
+        displacementVectors[direction][1] += incrementVec[1];
+
+        displacementVectors[direction][0] = displacementVectors[direction][0]%parameters.getDomainX();
+        displacementVectors[direction][1] = displacementVectors[direction][1]%parameters.getDomainY();
+    }
 }
 
 int Lattice::getTimeStep() const{

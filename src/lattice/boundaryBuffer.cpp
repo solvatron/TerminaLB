@@ -10,40 +10,45 @@ void BoundaryBuffer::initializeBoundaryBuffer(int _domainX, int _domainY){
     boundaryF.resize((2. * domainX + 2. * domainY) * 3.);
 }
 
-void BoundaryBuffer::setBoundaryBuffer(const int boundary, const Lattice& lattice){
-    if(boundary == 1){
-        for(int cellN = 0; cellN < domainY; cellN++){
-            std::vector<int> latticeCoords = {domainX-1, cellN};
-            std::vector<float> distributions(lattice.numDirections, 0);
-            lattice.getDistributions(latticeCoords, distributions);
-
+void BoundaryBuffer::setBoundaryBuffer(const Lattice& lattice){
+    for(int boundary = 1; boundary <= 4; boundary++){
+        int boundaryLength;
+        if(boundary%2 == 1) boundaryLength = domainY;
+        else boundaryLength = domainX;
+        for(int cellN = 0; cellN < boundaryLength; cellN++){
+            setBoundaryBufferFromLatticeCell(boundary, lattice, cellN);
         }
     }
 }
 
-void BoundaryBuffer::setInletProfile(const int boundary, const std::vector<float>& velocityProfile){
+void BoundaryBuffer::writeBoundaryBuffer(Lattice& lattice) const{
+    for(int boundary = 1; boundary <= 4; boundary++){
+        int boundaryLength;
+        if(boundary%2 == 1) boundaryLength = domainY;
+        else boundaryLength = domainX;
+        for(int cellN = 0; cellN < boundaryLength; cellN++){
+            setLatticeCellFromBoundaryBuffer(boundary, lattice, cellN);
+        }
+    }
+}
+
+void BoundaryBuffer::setInlet(const int boundary, Lattice& lattice, const std::vector<float>& velocityProfile) const{
     
 }
 
-void BoundaryBuffer::setInlet(const int boundary, const std::vector<float>& velocity){
+void BoundaryBuffer::setInlet(const int boundary, Lattice& lattice, const float velocity) const{
     std::vector<float> velocityProfile;
-    if(boundary%2 == 1){
-        velocityProfile.resize(2. * domainY, 0.0f);
-        for(int i = 0; i < domainY; i++){
-            velocityProfile[2.*i] = velocity[0];
-            velocityProfile[2.*i + 1] = velocity[1];
+    std::vector<int> velocityVec = lattice.latticeC[utils::reverse(boundary)];
+    int boundaryLength;
+    if(boundary%2 == 1) boundaryLength = domainY;
+    else boundaryLength = domainX;
+        velocityProfile.resize(2. * boundaryLength, 0.0f);
+        for(int i = 0; i < boundaryLength; i++){
+            velocityProfile[2.*i] = (float)velocityVec[0] * velocity;
+            velocityProfile[2.*i + 1] = (float)velocityVec[1] * velocity;
         }
-    }
 
-    if(boundary%2 == 0){
-        velocityProfile.resize(2. * domainX, 0.0f);
-        for(int i = 0; i < domainX; i++){
-            velocityProfile[2.*i] = velocity[0];
-            velocityProfile[2.*i + 1] = velocity[1];
-        }
-    }
-    
-    setInletProfile(boundary, velocityProfile);
+    setInlet(boundary, lattice, velocityProfile);
 }
 
 void BoundaryBuffer::setBoundaryBufferCell(const int boundary, const int cellN, const std::vector<float>& distributions){
@@ -58,7 +63,7 @@ void BoundaryBuffer::setBoundaryBufferCell(const int boundary, const int cellN, 
     boundaryF[index+2] = distributions[2];
 }
 
-void BoundaryBuffer::setBoundaryBufferFromLatticeCell(const Lattice& lattice, const int boundary, const int cellN){
+void BoundaryBuffer::setBoundaryBufferFromLatticeCell(const int boundary, const Lattice& lattice, const int cellN){
     std::vector<float> distributions (3, 0.0f);
     std::vector<int> latticeCoords = getLatticeCoords(boundary, cellN);
     std::vector<int> directions = getBoundaryDirectionsRead(boundary);
@@ -68,7 +73,30 @@ void BoundaryBuffer::setBoundaryBufferFromLatticeCell(const Lattice& lattice, co
     setBoundaryBufferCell(boundary, cellN, distributions);
 }
 
-std::vector<int> BoundaryBuffer::getLatticeCoords(const int boundary, const int cellN){
+void BoundaryBuffer::getBoundaryBufferCell(const int boundary, const int cellN, std::vector<float>& distributions) const{
+    distributions.resize(3, 0);
+    int index = 0;
+    if(boundary == 2) index = domainY;
+    if(boundary == 3) index = domainY + domainX;
+    if(boundary == 4) index = 2. * domainY + domainX;
+    index += cellN;
+    index *= 3;
+    distributions[0] = boundaryF[index];
+    distributions[1] = boundaryF[index+1];
+    distributions[2] = boundaryF[index+2];
+}
+
+void BoundaryBuffer::setLatticeCellFromBoundaryBuffer(const int boundary, Lattice& lattice, const int cellN) const{
+    std::vector<float> distributions (3, 0.0f);
+    std::vector<int> latticeCoords = getLatticeCoords(boundary, cellN);
+    std::vector<int> directions = getBoundaryDirectionsWrite(boundary);
+    getBoundaryBufferCell(boundary, cellN, distributions);
+    for(int i = 0; i < directions.size(); i++){
+        lattice.setSingleDistribution(latticeCoords, directions[i], distributions[i]);
+    }
+}
+
+std::vector<int> BoundaryBuffer::getLatticeCoords(const int boundary, const int cellN) const{
     if(boundary == 1) return std::vector<int> {domainX-1, cellN};
     if(boundary == 2) return std::vector<int> {cellN, 0};
     if(boundary == 3) return std::vector<int> {0, cellN};
