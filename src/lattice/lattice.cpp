@@ -34,24 +34,34 @@ void Lattice::collide(){
     incrementDisplacement();
 }
 
-void Lattice::getDistributions(const std::vector<int>& latticeCoords, std::vector<float>& distributions){
+void Lattice::getDistributions(const std::vector<int>& latticeCoords, std::vector<float>& distributions) const{
     for(int direction = 0; direction < numDirections; direction++){
-        int memoryX = (latticeCoords[0] + displacementVectors[direction][0]) % parameters.getDomainX();
-        int memoryY = (latticeCoords[1] + displacementVectors[direction][1]) % parameters.getDomainY();
-        int memoryIndex = direction + (numDirections * memoryX) + (parameters.getDomainX() * numDirections * memoryY);
-
+        int memoryIndex = getMemoryIndex(latticeCoords, direction);
         distributions[direction] = distributionF[memoryIndex];
     }
 }
 
 void Lattice::setDistributions(const std::vector<int>& latticeCoords, const std::vector<float>& distributions){
     for(int direction = 0; direction < numDirections; direction++){
-        int memoryX = (latticeCoords[0] + displacementVectors[direction][0]) % parameters.getDomainX();
-        int memoryY = (latticeCoords[1] + displacementVectors[direction][1]) % parameters.getDomainY();
-        int memoryIndex = direction + (numDirections * memoryX) + (parameters.getDomainX() * numDirections * memoryY);
-
+        int memoryIndex = getMemoryIndex(latticeCoords, direction);
         distributionF[memoryIndex] = distributions[direction];
     }
+}
+
+float Lattice::getSingleDistribution(const std::vector<int>& latticeCoords, const int direction) const{
+    int memoryIndex = getMemoryIndex(latticeCoords, direction);
+    return distributionF[memoryIndex];
+}
+
+void Lattice::setSingleDistribution(const std::vector<int>& latticeCoords, const int direction, const float distribution){
+    int memoryIndex = getMemoryIndex(latticeCoords, direction);
+    distributionF[memoryIndex] = distribution;
+}
+
+int Lattice::getMemoryIndex(const std::vector<int> latticeCoords, const int direction) const{
+    int memoryX = (latticeCoords[0] + displacementVectors[direction][0]) % parameters.getDomainX();
+    int memoryY = (latticeCoords[1] + displacementVectors[direction][1]) % parameters.getDomainY();
+    return direction + (numDirections * memoryX) + (parameters.getDomainX() * numDirections * memoryY);
 }
 
 void Lattice::getRhoUfromDistributions(const std::vector<float>& distributions, int density, std::vector<float>& velocity){
@@ -83,4 +93,12 @@ void Lattice::relaxDistributions(const std::vector<float>& eqDistributions, std:
     for(int direction; direction < numDirections; direction++){
         distributions[direction] = distributions[direction] - 1. / relaxationTime * (distributions[direction] - eqDistributions[direction]);
     }
+}
+
+
+void Lattice::incrementDisplacement(){
+}
+
+int Lattice::getTimeStep() const{
+    return step;
 }
