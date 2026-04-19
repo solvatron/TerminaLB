@@ -16,13 +16,16 @@ public:
     const std::vector<std::vector<int>> latticeC = {{0, 0}, {1, 0}, { 0, 1}, {-1,  0}, {0, -1},
                                                               {1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
 
+    Parameters parameters;
+
 
     void initialize(); //Done
     void collide(); //Done
     void stream(); //Done
 
-    int getTimeStep() const;
+    int getTimeStep() const; //Done
 
+    void getRhoUField(std::vector<float>& densityF, std::vector<float>& velocityF) const;
     void getDistributions(const std::vector<int>& latticeCoords, std::vector<float>& distributions) const; //Done
     void setDistributions(const std::vector<int>& latticeCoords, const std::vector<float>& distributions); //Done
 
@@ -40,15 +43,17 @@ private:
 
     BoundaryBuffer boundaryBuffer;
 
-    Parameters parameters;
 
-
+    void initializeDistributionF(const std::vector<float>& densityF, const std::vector<float>& velocityF); //Done
     void initializeDistributionF(); //Done
+    void initializeDistributionFTest(); //Done
 
-    void getRhoUfromDistributions(const std::vector<float>& distributions, int density, std::vector<float>& velocity); //Done
+    void getRhoUfromDistributions(const std::vector<float>& distributions, float& density, std::vector<float>& velocity) const; //Done
     void getEqDistribution(const float density, const std::vector<float>& velocity, std::vector<float>& eqDistributions); //Done
     void relaxDistributions(const std::vector<float>& eqDistributions, std::vector<float>& distributions); //Done
-    int getMemoryIndex(const std::vector<int> latticeCoords, const int direction) const; //Done
+    void relaxCorners();
+    int getMemoryIndex(const std::vector<int>& latticeCoords, const int direction) const; //Done
+
 
     void incrementDisplacement(); //Done
 };

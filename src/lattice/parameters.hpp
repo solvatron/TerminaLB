@@ -17,13 +17,13 @@ public:
 
     float getRelaxationTime() const;
 private:
-    int domainX;
-    int domainY;
+    int domainX = 10;
+    int domainY = 10;
 
-    std::vector<int> boundaryType{2, 0, 1, 0}; //0 = BB, 1 = inflow, 2 = outflow
+    std::vector<int> boundaryType{0, 0, 0, 0}; //0 = BB, 1 = inflow, 2 = outflow
     std::vector<float> inletVelocity{0, 0, 1, 0};
 
-    float latticeU = 0.1;
+    float dT = 0.01;
     float dx = 1;
     float Uin = 1;
     float viscosity = 1;

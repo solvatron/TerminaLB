@@ -1,17 +1,19 @@
 #include "boundaryBuffer.hpp"
 #include "lattice.hpp"
-#include "../utils/utils.cpp"
+#include "../utils/utils.hpp"
 
+#include <iostream>
 #include <vector>
 
 void BoundaryBuffer::initializeBoundaryBuffer(int _domainX, int _domainY){
     domainX = _domainX;
     domainY = _domainY;
-    boundaryF.resize((2. * domainX + 2. * domainY) * 3.);
+    boundaryF.resize((2 * domainX + 2 * domainY) * 3, 0);
 }
 
 void BoundaryBuffer::setBoundaryBuffer(const Lattice& lattice){
     for(int boundary = 1; boundary <= 4; boundary++){
+        std::cout << "[BoundaryBuffer] Setting BoundaryBuffer for boundary " << boundary << std::endl;
         int boundaryLength;
         if(boundary%2 == 1) boundaryLength = domainY;
         else boundaryLength = domainX;
@@ -23,6 +25,7 @@ void BoundaryBuffer::setBoundaryBuffer(const Lattice& lattice){
 
 void BoundaryBuffer::writeBoundaryBuffer(Lattice& lattice) const{
     for(int boundary = 1; boundary <= 4; boundary++){
+        std::cout << "[BoundaryBuffer] Writing BoundaryBuffer for boundary " << boundary << std::endl;
         int boundaryLength;
         if(boundary%2 == 1) boundaryLength = domainY;
         else boundaryLength = domainX;
@@ -90,9 +93,13 @@ void BoundaryBuffer::setLatticeCellFromBoundaryBuffer(const int boundary, Lattic
     std::vector<float> distributions (3, 0.0f);
     std::vector<int> latticeCoords = getLatticeCoords(boundary, cellN);
     std::vector<int> directions = getBoundaryDirectionsWrite(boundary);
+    //std::cout << "[BoundaryBuffer] Setting cell " << cellN << " at boundary " << boundary << std::endl;
+    //std::cout << "[BoundaryBuffer] The directions are: " << directions[0] << ", " << directions[1] << ", " << directions[2] << std::endl;
     getBoundaryBufferCell(boundary, cellN, distributions);
+    //std::cout << "[BoundaryBuffer] Got BoundaryBuffer distributions" << std::endl;
     for(int i = 0; i < directions.size(); i++){
         lattice.setSingleDistribution(latticeCoords, directions[i], distributions[i]);
+        //std::cout << "[BoundaryBuffer] Set direction " << directions[i] << std::endl;
     }
 }
 

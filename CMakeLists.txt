@@ -9,4 +9,5 @@ add_executable(TerminaLB src/main.cpp
                          src/lattice/lattice.cpp
                          src/lattice/boundaryBuffer.cpp
                          src/lattice/parameters.cpp
-                         src/utils/utils.cpp)
+                         src/utils/utils.cpp
+                         src/renderer/renderer.cpp)
